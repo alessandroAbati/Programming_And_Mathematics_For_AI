@@ -67,20 +67,30 @@ class Sigmoid:
     
 # Softmax layer class
 class Softmax:
-    def __init__(self):
-        self.dinputs = None
+    '''
+    A class representing the Softmax activation function.
+    '''
 
     def forward_pass(self, input_data):
-        # Shift the input data to avoid numerical instability in exponential calculations
-        exp_values = np.exp(input_data - np.max(input_data, axis=1, keepdims=True))
+        '''
+        Computes the forward pass of the Softmax activation function.
+
+        Parameters:
+        - input_data (numpy.ndarray): A numpy array containing the input data to which the Softmax
+                             function should be applied.
+
+        Returns:
+        - numpy.ndarray: The result of applying the Softmax function to 'input_data', with the
+                         same shape as 'input_data'.
+        ''' 
+        exp_values = np.exp(input_data - np.max(input_data, axis=1, keepdims=True)) # Shift the input data to avoid numerical instability in exponential calculations
         output = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         return output
 
     def backward_pass(self, dvalues):
         # The gradient of loss with respect to the input logits 
         # directly passed through in case of softmax + categorical cross-entropy
-        self.dinputs = dvalues
-        return self.dinputs
+        return dvalues
 
 # Dense layer class
 class Layer:
@@ -91,15 +101,27 @@ class Layer:
 
     def forward_pass(self, input_data):
         self.input = input_data
-        return np.dot(input_data, self.weights) + self.biases
+        return np.dot(input_data, self.weights) + self.biases # matrix multiplication between the input data and weights, then biases are added.
 
     def backward_pass(self, output_gradient, learning_rate):
-        weights_gradient = np.dot(self.input.T, output_gradient)
-        input_gradient = np.dot(output_gradient, self.weights.T)
+        '''
+        Computes the backward pass of the Dense layer.
+
+        Parameters:
+        - output_gradient: The gradient of the loss function with respect to the output of the layer.
+
+        - learning_rate: A hyperparameter that controls how much the weights and biases are updated during training.
+
+        Returns:
+        - numpy.ndarray: the gradient of the loss with respect to the layer's inputs (which will be passed back to the previous layer in the network).
+        ''' 
+        weights_gradient = np.dot(self.input.T, output_gradient) # gradient of the loss with respect to the weights
+        input_gradient = np.dot(output_gradient, self.weights.T) # gradient of the loss with respect to the layer's inputs
+        biases_gradient = np.sum(output_gradient, axis=0, keepdims=True)
 
         # Update weights and biases
         self.weights += learning_rate * weights_gradient
-        self.biases += learning_rate * np.sum(output_gradient, axis=0, keepdims=True)
+        self.biases += learning_rate * biases_gradient
 
         return input_gradient
 
